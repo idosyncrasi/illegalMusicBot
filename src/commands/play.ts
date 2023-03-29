@@ -6,6 +6,7 @@ import ytdl from 'ytdl-core';
 
 let pastQuene: string[] = [];
 let quene: string[] = [];
+
 // TODO: Movable entries in quene
 // TODO: Shuffle
 // TODO: Loop
@@ -29,16 +30,10 @@ export default (message: Message): any => {
 	
 };
 
-
-
 export const skip = (player: AudioPlayer): void => {
 	player.stop();
 	const resource = playNext(player);
 	if (resource) {
-		console.log(listQuene());
-		pastQuene.unshift(quene[0]);
-		quene.shift();
-		console.log(listQuene());
 		player.play(resource);
 	}
 	return;
@@ -62,14 +57,14 @@ export const listQuene = (): string => {
 // BUG: Slight audio glitches 
 const getSong = (link: string): AudioResource => {
 	const stream = ytdl(link, { filter: 'audioonly', dlChunkSize: 4096 });
-	const resource = createAudioResource(stream);
-	return resource;
+	return createAudioResource(stream);
 }
 
 const playLast = () => {
 	const link = pastQuene[1];
-	const resource = getSong(link);
-	return resource;
+	quene.unshift(pastQuene[0]);
+	pastQuene.shift();
+	return getSong(link);
 }
 
 const playNext = (player: AudioPlayer): AudioResource | void => {
@@ -77,8 +72,7 @@ const playNext = (player: AudioPlayer): AudioResource | void => {
 		const link = quene[0];
 		pastQuene.unshift(link);
 		quene.shift();
-		const resource = getSong(link);
-		return resource;
+		return getSong(link);
 	} else {
 		player.stop();
 	}
@@ -96,13 +90,6 @@ const oldConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBased
 		const resource = playNext(player);
 		if(resource) player.play(resource);
 	} else {
-
-		/*
-			BUG: Skipping then going immediately back, on double skip, removes song from both quenes
-			BUG: Skip songs currently double skips, ex. 0,1,2,3,4 => 0,2,4
-			Something to do with the entries not being pushed properly
-		*/
-
 		quene.push(link);
 		return message.reply(`${link} added to quene!`);
 	}

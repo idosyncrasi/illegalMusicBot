@@ -1,7 +1,16 @@
 import { getVoiceConnection, AudioPlayerStatus } from '@discordjs/voice';
-import { die } from '../commands/utils.js';
+import die from '../commands/die.js';
 import play, { back, listQuene, skip } from '../commands/play.js';
 import { data } from '../config.js';
+export const emojis = {
+    'thumbsup': '👍',
+    'thumbsdown': '👎',
+    'skip': '⏩',
+    'back': '⏪',
+    'pause': '⏸️',
+    'play': '▶️',
+    'stop': '⏹️'
+};
 let guildId;
 let player;
 let connection;
@@ -20,7 +29,7 @@ export default async (client) => {
             case 'play':
                 if (message.content === 'play') {
                     player.unpause();
-                    return;
+                    return message.react(emojis.play);
                 }
             case 'play':
                 guildId = play(message);
@@ -30,7 +39,8 @@ export default async (client) => {
                     if ('subscription' in connection.state && connection.state.subscription) {
                         player = connection.state.subscription.player;
                         if (player.state.status === AudioPlayerStatus.Idle) {
-                            return message.reply('Playing: ' + message.content.split(' ')[1]);
+                            console.log(`${emojis.thumbsup}`);
+                            return message.react(`${emojis.play}`);
                         }
                         else {
                             return;
@@ -47,15 +57,16 @@ export default async (client) => {
                 return message.reply(listQuene());
             case 'skip':
                 skip(player);
-                return message.reply('Skipped!');
+                return message.react(`${emojis.skip}`);
             case 'back':
-                return message.reply(back(player));
+                back(player);
+                return message.react(`${emojis.back}`);
             case 'pause':
                 player.pause();
-                return message.reply('Paused!');
+                return message.react(`${emojis.pause}`);
             case 'stop':
                 player.stop();
-                return message.reply('Stopped!');
+                return message.react(`${emojis.stop}`);
             case 'die':
                 die(guildId);
                 return;

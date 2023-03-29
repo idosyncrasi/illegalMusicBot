@@ -1,11 +1,22 @@
 import { Message } from 'discord.js';
-import { getVoiceConnection, VoiceConnection, AudioPlayer, AudioPlayerStatus } from '@discordjs/voice';
+import { getVoiceConnection, VoiceConnection, AudioPlayer, AudioPlayerStatus, VoiceConnectionStatus } from '@discordjs/voice';
 
-import { die } from '../commands/utils.js'; // 'require' runs from ./commands
+import die from '../commands/die.js'; // 'require' runs from ./commands
 import play, { back, listQuene, skip } from '../commands/play.js';
 
 // @ts-ignore
 import { data } from '../config.js';
+
+// TODO: Create reaciton chain from most recent song added, that allows reactions to be used instead of commands
+export const emojis = {
+	'thumbsup': '👍',
+	'thumbsdown': '👎',
+	'skip': '⏩',
+	'back': '⏪',
+	'pause': '⏸️',
+	'play': '▶️',
+	'stop': '⏹️'
+};
 
 let guildId: string;
 let player: AudioPlayer;
@@ -22,10 +33,11 @@ export default async (client: any): Promise<void> => {
 
 			case 'play':
 				if (message.content === 'play') {
-					player.unpause(); return;
+					player.unpause(); 
+					return message.react(emojis.play);
 				}
 
-			case 'play': // BUG: Will double/triple print a lot
+			case 'play':
 				guildId = play(message);
 				if (!connection || connection === undefined) connection = getVoiceConnection(guildId);
 
@@ -33,8 +45,9 @@ export default async (client: any): Promise<void> => {
 					if ('subscription' in connection!.state && connection!.state.subscription) {
 						player = connection!.state.subscription.player;
 						if(player.state.status === AudioPlayerStatus.Idle){
-							return message.reply('Playing: ' + message.content.split(' ')[1]);
-						} else { return; }
+							console.log(`${emojis.thumbsup}`);
+							return message.react(`${emojis.play}`);
+						} else { return }
 					} else {
 						return message.reply('Something went wrong, please try again after going to fuck yourself.');
 					}
@@ -47,18 +60,19 @@ export default async (client: any): Promise<void> => {
 
 			case 'skip':
 				skip(player)
-				return message.reply('Skipped!');
+				return message.react(`${emojis.skip}`);
 			
 			case 'back':
-				return message.reply(back(player));
+				back(player);
+				return message.react(`${emojis.back}`);
 
 			case 'pause':
 				player.pause();
-				return message.reply('Paused!');
+				return message.react(`${emojis.pause}`);
 
 			case 'stop':
 				player.stop();
-				return message.reply('Stopped!');
+				return message.react(`${emojis.stop}`);
 
 			case 'die': // BUG: Die stopped working for some reason
 				die(guildId);

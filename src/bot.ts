@@ -13,7 +13,8 @@ export const client: Client = new Client({ // Add intents, gives bot all of foll
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.GuildVoiceStates,
 		GatewayIntentBits.MessageContent,
-		GatewayIntentBits.DirectMessages
+		GatewayIntentBits.DirectMessages,
+		GatewayIntentBits.GuildMessageReactions
 	]
 });
 

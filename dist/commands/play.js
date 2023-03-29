@@ -26,10 +26,6 @@ export const skip = (player) => {
     player.stop();
     const resource = playNext(player);
     if (resource) {
-        console.log(listQuene());
-        pastQuene.unshift(quene[0]);
-        quene.shift();
-        console.log(listQuene());
         player.play(resource);
     }
     return;
@@ -49,21 +45,20 @@ export const listQuene = () => {
 };
 const getSong = (link) => {
     const stream = ytdl(link, { filter: 'audioonly', dlChunkSize: 4096 });
-    const resource = createAudioResource(stream);
-    return resource;
+    return createAudioResource(stream);
 };
 const playLast = () => {
     const link = pastQuene[1];
-    const resource = getSong(link);
-    return resource;
+    quene.unshift(pastQuene[0]);
+    pastQuene.shift();
+    return getSong(link);
 };
 const playNext = (player) => {
     if (quene.length > 0) {
         const link = quene[0];
         pastQuene.unshift(link);
         quene.shift();
-        const resource = getSong(link);
-        return resource;
+        return getSong(link);
     }
     else {
         player.stop();
