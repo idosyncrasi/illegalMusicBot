@@ -28,14 +28,14 @@ const setConnections = (message: Message): boolean => {
 		if ('subscription' in connection!.state && connection!.state.subscription) {
 			player = connection!.state.subscription.player;
 			return true;
-		} else { return false; }
-	} else { return false; }
+		} else return false;
+	} else return false;
 }
 
 export default async (client: any): Promise<void> => {
 	client.on('messageCreate', (message: Message) => {
-		if (message.content[0] === data.prefix) { message.content = message.content.slice(1); }
-		else { return; }
+		if (message.content[0] === data.prefix) message.content = message.content.slice(1);
+		else return;
 
 		console.log(message.content);
 

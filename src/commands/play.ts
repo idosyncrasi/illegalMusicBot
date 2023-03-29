@@ -27,45 +27,41 @@ export default (message: Message): any => {
 	} else {
 		return newConneciton(message, voiceChannel, link);
 	}
-	
+
 };
 
 export const skip = (player: AudioPlayer): void => {
 	player.stop();
 	const resource = playNext(player);
-	if (resource) {
-		player.play(resource);
-	}
+	if (resource) player.play(resource);
 	return;
-}
+};
 
 export const back = (player: AudioPlayer): string => {
 	player.stop();
 	const resource = playLast();
 	player.play(resource);
 	return "Playing last song...";
-}
+};
 
 export const listQuene = (): string => {
 	let toWrite: string = '';
-	for(let i = 1; i < quene.length + 1; i++) {
-		toWrite += `${i}) ${quene[i - 1]}\n`;
-	}
+	for (let i = 1; i < quene.length + 1; i++) toWrite += `${i}) ${quene[i - 1]}\n`;
 	return toWrite;
-}
+};
 
 // BUG: Slight audio glitches 
 const getSong = (link: string): AudioResource => {
 	const stream = ytdl(link, { filter: 'audioonly', dlChunkSize: 4096 });
 	return createAudioResource(stream);
-}
+};
 
 const playLast = () => {
 	const link = pastQuene[1];
 	quene.unshift(pastQuene[0]);
 	pastQuene.shift();
 	return getSong(link);
-}
+};
 
 const playNext = (player: AudioPlayer): AudioResource | void => {
 	if (quene.length > 0) {
@@ -73,27 +69,25 @@ const playNext = (player: AudioPlayer): AudioResource | void => {
 		pastQuene.unshift(link);
 		quene.shift();
 		return getSong(link);
-	} else {
-		player.stop();
-	}
-}
+	} else player.stop();
+};
 
 const oldConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBasedChannel, link: string): any => {
 	const connection = getVoiceConnection(voiceChannel.guild.id);
 	let player: AudioPlayer | null;
 	if ('subscription' in connection!.state && connection!.state.subscription) {
 		player = connection!.state.subscription.player;
-	} else { player = null; }
+	} else player = null;
 	console.log();
-	if(player && quene.length === 0 && player.state.status === AudioPlayerStatus.Idle) {
+	if (player && quene.length === 0 && player.state.status === AudioPlayerStatus.Idle) {
 		quene.push(link);
 		const resource = playNext(player);
-		if(resource) player.play(resource);
+		if (resource) player.play(resource);
 	} else {
 		quene.push(link);
 		return message.reply(`${link} added to quene!`);
 	}
-}
+};
 
 const newConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBasedChannel, link: string): any => {
 	pastQuene.push(link);
@@ -120,23 +114,15 @@ const newConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBased
 
 	player.on(AudioPlayerStatus.Idle, () => {
 		const res = playNext(player);
-		if (res) {
-			player.play(res);
-		} else {
-			return message.reply("Quene has ended");
-		}
+		if (res) player.play(res);
+		else return message.reply("Quene has ended");
 	});
 
 	player.on('error', error => {
 		console.error(`Error: ${error.message} with resource`);
 		const res = playNext(player);
-		if (res) {
-			player.play(res);
-		} else {
-			return message.reply("Quene has ended");
-		}
+		if (res) player.play(res); else return message.reply("Quene has ended");
 	});
 
 	return voiceChannel.guild.id;
-}
-
+};

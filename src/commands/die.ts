@@ -9,4 +9,4 @@ export default (guildId: string): void => {
 	}
 	client.destroy();
 	return;
-}
+};
