@@ -2,10 +2,13 @@ import { Message } from 'discord.js';
 import { getVoiceConnection, VoiceConnection, AudioPlayer, AudioPlayerStatus, VoiceConnectionStatus } from '@discordjs/voice';
 
 import die from '../commands/die.js'; // 'require' runs from ./commands
-import play, { back, listQuene, skip } from '../commands/play.js';
+import play from '../commands/play.js';
 
 // @ts-ignore
 import { data } from '../config.js';
+import Quene from 'src/quene.js';
+
+export const quene: Quene = new Quene;
 
 // TODO: Create reaciton chain from most recent song added, that allows reactions to be used instead of commands
 export const emojis = {
@@ -54,14 +57,14 @@ export default async (client: any): Promise<void> => {
 				setConnections(message);
 
 			case 'quene':
-				return message.reply(listQuene());
+				return message.reply(quene.listQuene());
 
 			case 'skip':
-				skip(player)
+				quene.skip(player)
 				return message.react(`${emojis.skip}`);
 
 			case 'back':
-				back(player);
+				quene.back(player);
 				return message.react(`${emojis.back}`);
 
 			case 'pause':
