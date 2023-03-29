@@ -1,16 +1,14 @@
 import { Message } from 'discord.js';
-import { getVoiceConnection, VoiceConnection } from '@discordjs/voice';
+import { getVoiceConnection, VoiceConnection, AudioPlayer } from '@discordjs/voice';
 
 import { die } from '../commands/utils.js'; // 'require' runs from ./commands
-import play from '../commands/play.js';
-import addSong from '../commands/addSong.js'
+import play, { back, listQuene, skip } from '../commands/play.js';
 
 // @ts-ignore
 import { data } from '../config.js';
 
-
 let guildId: string;
-let player: { unpause: () => void; pause: () => void; stop: () => void; };
+let player: AudioPlayer;
 let connection: VoiceConnection | undefined;
 
 export default async (client: any): Promise<void> => {
@@ -42,6 +40,15 @@ export default async (client: any): Promise<void> => {
 					return message.reply('Something went wrong, please try again after going to fuck yourself.');
 				}
 
+			case 'quene':
+				return message.reply(listQuene());
+
+			case 'skip':
+				return message.reply(skip(player));
+			
+			case 'back':
+				return message.reply(back(player));
+
 			case 'pause':
 				player.pause();
 				return message.reply('Paused!');
@@ -50,17 +57,12 @@ export default async (client: any): Promise<void> => {
 				player.stop();
 				return message.reply('Stopped!');
 
-			case 'add':
-				addSong(guildId);
-
 			case 'die':
-				console.log("Ran die");
 				die(guildId);
+				return;
 
 			default:
 				return message.reply("Silly goose that wasn't even a command");
 		}
-
-		
 	});
 };

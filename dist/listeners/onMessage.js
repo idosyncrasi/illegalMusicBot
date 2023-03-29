@@ -1,7 +1,6 @@
 import { getVoiceConnection } from '@discordjs/voice';
 import { die } from '../commands/utils.js';
-import play from '../commands/play.js';
-import addSong from '../commands/addSong.js';
+import play, { back, listQuene, skip } from '../commands/play.js';
 import { data } from '../config.js';
 let guildId;
 let player;
@@ -39,17 +38,21 @@ export default async (client) => {
                 else {
                     return message.reply('Something went wrong, please try again after going to fuck yourself.');
                 }
+            case 'quene':
+                return message.reply(listQuene());
+            case 'skip':
+                return message.reply(skip(player));
+            case 'back':
+                return message.reply(back(player));
             case 'pause':
                 player.pause();
                 return message.reply('Paused!');
             case 'stop':
                 player.stop();
                 return message.reply('Stopped!');
-            case 'add':
-                addSong(guildId);
             case 'die':
-                console.log("Ran die");
                 die(guildId);
+                return;
             default:
                 return message.reply("Silly goose that wasn't even a command");
         }

@@ -22,6 +22,7 @@
 	},
 	"files": [
 		"src/bot.ts",
+		"src/config.ts",
 		"src/commands/play.ts",
 		"src/commands/utils.ts",
 		"src/listeners/onMessage.ts",

@@ -1,6 +1,8 @@
-import { joinVoiceChannel, AudioPlayerStatus } from '@discordjs/voice';
+import { joinVoiceChannel, AudioPlayerStatus, getVoiceConnection } from '@discordjs/voice';
 import { createAudioPlayer, createAudioResource } from '@discordjs/voice';
 import ytdl from 'ytdl-core';
+let pastQuene = [];
+let quene = [];
 export default (message) => {
     if (!message.member)
         return;
@@ -13,6 +15,65 @@ export default (message) => {
     const link = args[1];
     if (!ytdl.validateURL(link))
         return message.reply('Give me an actual link PLEASE');
+    if (getVoiceConnection(voiceChannel.guild.id)) {
+        return oldConneciton(message, link);
+    }
+    else {
+        return newConneciton(message, voiceChannel, link);
+    }
+};
+export const skip = (player) => {
+    player.stop();
+    const resource = playNext(player);
+    if (resource) {
+        player.play(resource);
+        return 'Skipped!';
+    }
+    else {
+        return '';
+    }
+};
+export const back = (player) => {
+    player.stop();
+    const resource = playLast(player);
+    player.play(resource);
+    return "Playing last song...";
+};
+export const listQuene = () => {
+    let toWrite = '';
+    for (let i = 1; i < quene.length + 1; i++) {
+        toWrite += `${i}) ${quene[i - 1]}\n`;
+    }
+    return toWrite;
+};
+const getSong = (link) => {
+    const stream = ytdl(link, { filter: 'audioonly', dlChunkSize: 4096 });
+    const resource = createAudioResource(stream);
+    return resource;
+};
+const playLast = (player) => {
+    const link = pastQuene[1];
+    const resource = getSong(link);
+    return resource;
+};
+const playNext = (player) => {
+    if (quene.length > 0) {
+        const link = quene[0];
+        pastQuene.unshift(link);
+        quene.shift();
+        const resource = getSong(link);
+        return resource;
+    }
+    else {
+        player.stop();
+    }
+};
+const oldConneciton = (message, link) => {
+    quene.push(link);
+    return message.reply(`${link} added to quene!`);
+};
+const newConneciton = (message, voiceChannel, link) => {
+    pastQuene.push(link);
     const connection = joinVoiceChannel({
         channelId: voiceChannel.id,
         guildId: voiceChannel.guild.id,
@@ -21,19 +82,31 @@ export default (message) => {
     connection.on('stateChange', (oldState, newState) => {
         console.log(`Connection transitioned from ${oldState.status} to ${newState.status}`);
     });
-    const stream = ytdl(link, { filter: 'audioonly' });
     const player = createAudioPlayer();
-    const resource = createAudioResource(stream);
+    const resource = getSong(link);
     connection.subscribe(player);
     player.play(resource);
     player.on('stateChange', (oldState, newState) => {
         console.log(`Audio player transitioned from ${oldState.status} to ${newState.status}`);
     });
     player.on(AudioPlayerStatus.Idle, () => {
+        const res = playNext(player);
+        if (res) {
+            player.play(res);
+        }
+        else {
+            return message.reply("Quene has ended");
+        }
     });
     player.on('error', error => {
         console.error(`Error: ${error.message} with resource`);
-        player.stop();
+        const res = playNext(player);
+        if (res) {
+            player.play(res);
+        }
+        else {
+            return message.reply("Quene has ended");
+        }
     });
     return voiceChannel.guild.id;
 };

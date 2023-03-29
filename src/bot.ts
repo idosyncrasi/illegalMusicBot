@@ -24,9 +24,9 @@ onMessage(client);
 client.login(data.token);
 
 /*
-	TODO: Add a quene (movable entries)
+	TODO: movable entries in quene
 	TODO: Add other website support/not only single youtube video
-	TODO: Skip songs
+	TODO: Skip songs (currently double skips, ex. 0,1,2,3,4 => 0,2,4)
 	TODO: shuffle
 	TODO: loop
 */
