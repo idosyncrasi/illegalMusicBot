@@ -3,9 +3,6 @@
 	"description": "A discord bot designed to do bad things",
 	"version": "0.1.0",
 	"license": "UNLICENSED",
-
-	"main": "bot.js",
-	"files": [ "config.json", "./commands/*" ],
 	"dependencies": {
 		"discord.js": "14.8.0",
 		"@discordjs/voice": "0.15.0",
@@ -14,9 +11,5 @@
 	},
 	"engines": { "node" : "19.8.1" },
 	"type":"module",
-	"scripts": {
-		"start": "ts-node src/bot.ts"
-	},
-
 	"private": true
 }

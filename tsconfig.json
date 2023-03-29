@@ -20,16 +20,11 @@
 		"sourceMap": true,
 		"baseUrl": "./"
 	},
-	"files": [
-		"src/bot.ts",
-		"src/config.ts",
-		"src/commands/play.ts",
-		"src/commands/die.ts",
-		"src/listeners/onMessage.ts",
-		"src/listeners/ready.ts"
-	],
 	"exclude": [
+		".vscode",
+		".yt-dlp",
 		"node_modules",
-		"dist"
+		"dist",
+		".gitignore"
 	],
 }
