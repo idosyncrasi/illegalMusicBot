@@ -105,3 +105,9 @@ dist
 
 # .map files from debugger
 *.js.map
+
+# VSCode
+.vscode
+
+# yt-dlp binary
+.yt-dlp
