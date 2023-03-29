@@ -6,6 +6,10 @@ import ytdl from 'ytdl-core';
 
 let pastQuene: string[] = [];
 let quene: string[] = [];
+// TODO: Movable entries in quene
+// TODO: Shuffle
+// TODO: Loop
+// TODO: Log
 
 export default (message: Message): any => {
 	if (!message.member) return;
@@ -18,27 +22,31 @@ export default (message: Message): any => {
 	if (!ytdl.validateURL(link)) return message.reply('Give me an actual link PLEASE');
 
 	if (getVoiceConnection(voiceChannel.guild.id)) {
-		return oldConneciton(message, link);
+		return oldConneciton(message, voiceChannel, link);
 	} else {
 		return newConneciton(message, voiceChannel, link);
 	}
 	
 };
 
-export const skip = (player: AudioPlayer): string => {
+
+
+export const skip = (player: AudioPlayer): void => {
 	player.stop();
 	const resource = playNext(player);
 	if (resource) {
+		console.log(listQuene());
+		pastQuene.unshift(quene[0]);
+		quene.shift();
+		console.log(listQuene());
 		player.play(resource);
-		return 'Skipped!';
-	} else {
-		return '';
 	}
+	return;
 }
 
 export const back = (player: AudioPlayer): string => {
 	player.stop();
-	const resource = playLast(player);
+	const resource = playLast();
 	player.play(resource);
 	return "Playing last song...";
 }
@@ -51,19 +59,20 @@ export const listQuene = (): string => {
 	return toWrite;
 }
 
+// BUG: Slight audio glitches 
 const getSong = (link: string): AudioResource => {
 	const stream = ytdl(link, { filter: 'audioonly', dlChunkSize: 4096 });
 	const resource = createAudioResource(stream);
 	return resource;
 }
 
-const playLast = (player: AudioPlayer) => {
+const playLast = () => {
 	const link = pastQuene[1];
 	const resource = getSong(link);
 	return resource;
 }
 
-const playNext = (player: AudioPlayer) => {
+const playNext = (player: AudioPlayer): AudioResource | void => {
 	if (quene.length > 0) {
 		const link = quene[0];
 		pastQuene.unshift(link);
@@ -75,9 +84,28 @@ const playNext = (player: AudioPlayer) => {
 	}
 }
 
-const oldConneciton = (message: Message, link: string): any => {
-	quene.push(link);
-	return message.reply(`${link} added to quene!`);
+const oldConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBasedChannel, link: string): any => {
+	const connection = getVoiceConnection(voiceChannel.guild.id);
+	let player: AudioPlayer | null;
+	if ('subscription' in connection!.state && connection!.state.subscription) {
+		player = connection!.state.subscription.player;
+	} else { player = null; }
+	console.log();
+	if(player && quene.length === 0 && player.state.status === AudioPlayerStatus.Idle) {
+		quene.push(link);
+		const resource = playNext(player);
+		if(resource) player.play(resource);
+	} else {
+
+		/*
+			BUG: Skipping then going immediately back, on double skip, removes song from both quenes
+			BUG: Skip songs currently double skips, ex. 0,1,2,3,4 => 0,2,4
+			Something to do with the entries not being pushed properly
+		*/
+
+		quene.push(link);
+		return message.reply(`${link} added to quene!`);
+	}
 }
 
 const newConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBasedChannel, link: string): any => {
@@ -124,3 +152,4 @@ const newConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBased
 
 	return voiceChannel.guild.id;
 }
+

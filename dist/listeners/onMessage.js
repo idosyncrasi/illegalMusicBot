@@ -1,4 +1,4 @@
-import { getVoiceConnection } from '@discordjs/voice';
+import { getVoiceConnection, AudioPlayerStatus } from '@discordjs/voice';
 import { die } from '../commands/utils.js';
 import play, { back, listQuene, skip } from '../commands/play.js';
 import { data } from '../config.js';
@@ -26,10 +26,15 @@ export default async (client) => {
                 guildId = play(message);
                 if (!connection || connection === undefined)
                     connection = getVoiceConnection(guildId);
-                if (connection !== undefined) {
+                if (connection) {
                     if ('subscription' in connection.state && connection.state.subscription) {
                         player = connection.state.subscription.player;
-                        return message.reply('Playing: ' + message.content.split(' ')[1]);
+                        if (player.state.status === AudioPlayerStatus.Idle) {
+                            return message.reply('Playing: ' + message.content.split(' ')[1]);
+                        }
+                        else {
+                            return;
+                        }
                     }
                     else {
                         return message.reply('Something went wrong, please try again after going to fuck yourself.');
@@ -41,7 +46,8 @@ export default async (client) => {
             case 'quene':
                 return message.reply(listQuene());
             case 'skip':
-                return message.reply(skip(player));
+                skip(player);
+                return message.reply('Skipped!');
             case 'back':
                 return message.reply(back(player));
             case 'pause':

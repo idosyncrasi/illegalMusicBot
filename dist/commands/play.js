@@ -16,7 +16,7 @@ export default (message) => {
     if (!ytdl.validateURL(link))
         return message.reply('Give me an actual link PLEASE');
     if (getVoiceConnection(voiceChannel.guild.id)) {
-        return oldConneciton(message, link);
+        return oldConneciton(message, voiceChannel, link);
     }
     else {
         return newConneciton(message, voiceChannel, link);
@@ -26,16 +26,17 @@ export const skip = (player) => {
     player.stop();
     const resource = playNext(player);
     if (resource) {
+        console.log(listQuene());
+        pastQuene.unshift(quene[0]);
+        quene.shift();
+        console.log(listQuene());
         player.play(resource);
-        return 'Skipped!';
     }
-    else {
-        return '';
-    }
+    return;
 };
 export const back = (player) => {
     player.stop();
-    const resource = playLast(player);
+    const resource = playLast();
     player.play(resource);
     return "Playing last song...";
 };
@@ -51,7 +52,7 @@ const getSong = (link) => {
     const resource = createAudioResource(stream);
     return resource;
 };
-const playLast = (player) => {
+const playLast = () => {
     const link = pastQuene[1];
     const resource = getSong(link);
     return resource;
@@ -68,9 +69,26 @@ const playNext = (player) => {
         player.stop();
     }
 };
-const oldConneciton = (message, link) => {
-    quene.push(link);
-    return message.reply(`${link} added to quene!`);
+const oldConneciton = (message, voiceChannel, link) => {
+    const connection = getVoiceConnection(voiceChannel.guild.id);
+    let player;
+    if ('subscription' in connection.state && connection.state.subscription) {
+        player = connection.state.subscription.player;
+    }
+    else {
+        player = null;
+    }
+    console.log();
+    if (player && quene.length === 0 && player.state.status === AudioPlayerStatus.Idle) {
+        quene.push(link);
+        const resource = playNext(player);
+        if (resource)
+            player.play(resource);
+    }
+    else {
+        quene.push(link);
+        return message.reply(`${link} added to quene!`);
+    }
 };
 const newConneciton = (message, voiceChannel, link) => {
     pastQuene.push(link);

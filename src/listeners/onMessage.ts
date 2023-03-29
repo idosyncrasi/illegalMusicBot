@@ -1,5 +1,5 @@
 import { Message } from 'discord.js';
-import { getVoiceConnection, VoiceConnection, AudioPlayer } from '@discordjs/voice';
+import { getVoiceConnection, VoiceConnection, AudioPlayer, AudioPlayerStatus } from '@discordjs/voice';
 
 import { die } from '../commands/utils.js'; // 'require' runs from ./commands
 import play, { back, listQuene, skip } from '../commands/play.js';
@@ -13,7 +13,7 @@ let connection: VoiceConnection | undefined;
 
 export default async (client: any): Promise<void> => {
 	client.on('messageCreate', (message: Message) => {
-		if (message.content[0] === data.prefix) { message.content = message.content.slice(1); } else { return; }
+		if (message.content[0] === data.prefix) { message.content = message.content.slice(1); } else { return }
 		console.log(message.content);
 
 		switch (message.content.split(' ')[0]) {
@@ -25,14 +25,16 @@ export default async (client: any): Promise<void> => {
 					player.unpause(); return;
 				}
 
-			case 'play':
+			case 'play': // BUG: Will double/triple print a lot
 				guildId = play(message);
 				if (!connection || connection === undefined) connection = getVoiceConnection(guildId);
 
-				if (connection !== undefined) {
+				if (connection) {
 					if ('subscription' in connection!.state && connection!.state.subscription) {
 						player = connection!.state.subscription.player;
-						return message.reply('Playing: ' + message.content.split(' ')[1]);
+						if(player.state.status === AudioPlayerStatus.Idle){
+							return message.reply('Playing: ' + message.content.split(' ')[1]);
+						} else { return; }
 					} else {
 						return message.reply('Something went wrong, please try again after going to fuck yourself.');
 					}
@@ -44,7 +46,8 @@ export default async (client: any): Promise<void> => {
 				return message.reply(listQuene());
 
 			case 'skip':
-				return message.reply(skip(player));
+				skip(player)
+				return message.reply('Skipped!');
 			
 			case 'back':
 				return message.reply(back(player));
@@ -57,7 +60,7 @@ export default async (client: any): Promise<void> => {
 				player.stop();
 				return message.reply('Stopped!');
 
-			case 'die':
+			case 'die': // BUG: Die stopped working for some reason
 				die(guildId);
 				return;
 
