@@ -1,21 +1,23 @@
 import { Message } from 'discord.js';
-import { getVoiceConnection, VoiceConnection, AudioPlayer, AudioPlayerStatus, VoiceConnectionStatus } from '@discordjs/voice';
+import { getVoiceConnection, VoiceConnection, AudioPlayer } from '@discordjs/voice';
 
 import die from '../commands/die.js'; // 'require' runs from ./commands
 import play from '../commands/play.js';
 
 // @ts-ignore
 import { data } from '../config.js';
-import Quene from 'src/quene.js';
+import Quene from '../quene.js';
+import disconnect from '../commands/disconnect.js';
 
 export const quene: Quene = new Quene;
 
-// TODO: Create reaciton chain from most recent song added, that allows reactions to be used instead of commands
+// TODO?: Create reaciton chain from most recent song added, that allows reactions to be used instead of commands
 export const emojis = {
 	'thumbsup': '👍',
 	'thumbsdown': '👎',
 	'skip': '⏩',
 	'back': '⏪',
+	'shuffle': '🔀',
 	'pause': '⏸️',
 	'play': '▶️',
 	'stop': '⏹️'
@@ -25,7 +27,9 @@ let guildId: string;
 let player: AudioPlayer;
 let connection: VoiceConnection | undefined;
 
-const setConnections = (message: Message): boolean => {
+
+// TODO?: Refactor connections functions to separate file (if needed by more files)
+const setConnections = (): boolean => {
 	if (!connection || connection === undefined) connection = getVoiceConnection(guildId);
 	if (connection) {
 		if ('subscription' in connection!.state && connection!.state.subscription) {
@@ -34,6 +38,19 @@ const setConnections = (message: Message): boolean => {
 		} else return false;
 	} else return false;
 }
+
+const checkConnections = (): boolean => {
+	if (!connection || connection === undefined) return false;
+	if ('subscription' in connection!.state && connection!.state.subscription) {
+		if(connection!.state.subscription.player) return false;
+	}
+	return true;
+};
+
+const resetConnections = (): void => {
+	if (checkConnections()) return;
+	else setConnections(); 
+};
 
 export default async (client: any): Promise<void> => {
 	client.on('messageCreate', (message: Message) => {
@@ -48,13 +65,14 @@ export default async (client: any): Promise<void> => {
 
 			case 'play':
 				if (message.content === 'play') {
-					player.unpause();
-					return message.react(emojis.play);
+					resetConnections();
+					player.unpause(); 
+					return message.react(`${emojis.play}`);
 				}
 
 			case 'play':
 				guildId = play(message);
-				setConnections(message);
+				return setConnections();
 
 			case 'quene':
 				return message.reply(quene.listQuene());
@@ -67,17 +85,27 @@ export default async (client: any): Promise<void> => {
 				quene.back(player);
 				return message.react(`${emojis.back}`);
 
+			case 'shuffle':
+				quene.shuffle();
+				return message.react(`${emojis.shuffle}`);
+
 			case 'pause':
+				resetConnections();
 				player.pause();
 				return message.react(`${emojis.pause}`);
 
+			case 'clear':
+				quene.clear();
+				return message.reply("Quene cleared!");
+
 			case 'stop':
-				player.stop();
+				quene.clear();
+				disconnect(guildId);
+				connection = undefined;
 				return message.react(`${emojis.stop}`);
 
-			case 'die': // BUG: Die stopped working for some reason
+			case 'die':
 				die(guildId);
-				return;
 
 			default:
 				return message.reply("Silly goose that wasn't even a command");
