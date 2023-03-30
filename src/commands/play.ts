@@ -7,9 +7,7 @@ import ytdl from 'ytdl-core';
 import { quene } from '../listeners/onMessage.js';
 
 
-// TODO: Movable entries in quene
-// TODO: Loop
-// TODO: Log
+
 
 export default (message: Message): any => {
 	if (!message.member) return;

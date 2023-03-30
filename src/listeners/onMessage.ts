@@ -9,6 +9,10 @@ import { data } from '../config.js';
 import Quene from '../quene.js';
 import disconnect from '../commands/disconnect.js';
 
+// TODO: Movable entries in quene
+// TODO: Loop
+// TODO: Log
+
 export const quene: Quene = new Quene;
 
 // TODO?: Create reaciton chain from most recent song added, that allows reactions to be used instead of commands
@@ -20,7 +24,8 @@ export const emojis = {
 	'shuffle': '🔀',
 	'pause': '⏸️',
 	'play': '▶️',
-	'stop': '⏹️'
+	'stop': '⏹️',
+	'loop': '🔁'
 };
 
 let guildId: string;
@@ -88,6 +93,10 @@ export default async (client: any): Promise<void> => {
 			case 'shuffle':
 				quene.shuffle();
 				return message.react(`${emojis.shuffle}`);
+			
+			case 'loop':
+				quene.loop();
+				return message.react(`${emojis.loop}`);
 
 			case 'pause':
 				resetConnections();

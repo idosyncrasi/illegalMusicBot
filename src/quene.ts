@@ -3,10 +3,12 @@ import { getSong } from "./commands/play.js";
 
 export default class Quene {
 
+	'isLooping': boolean;
 	'next': string[];
 	'previous': string[];
 
 	constructor() {
+		this.isLooping = false;
 		this.next = [];
 		this.previous= [];
 	}
@@ -25,7 +27,7 @@ export default class Quene {
 		return "Playing last song...";
 	};
 
-	shuffle = () => {
+	shuffle = (): void => {
 		// Stolen with care from https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 
 		let currentIndex = this.next.length,  randomIndex;
@@ -41,20 +43,33 @@ export default class Quene {
 			[this.next[currentIndex], this.next[randomIndex]] = [
 			this.next[randomIndex], this.next[currentIndex]];
 		}
-		
-		return this.next;
+	};
+
+	loop = (): void => {
+		if (!this.isLooping) {
+			const link = this.previous[0];
+			this.next.unshift(link);
+			this.isLooping = true;
+		} else {
+			this.next.shift();
+			this.isLooping = false;
+		}
 	};
 
 	playNext = (player: AudioPlayer): AudioResource | void => {
 		if (this.next.length > 0) {
 			const link = this.next[0];
-			this.previous.unshift(link);
-			this.next.shift();
-			return getSong(link);
+			if (!this.isLooping) {
+				this.previous.unshift(link);
+				this.next.shift();
+				return getSong(link);
+			} else {
+				return getSong(link);
+			}
 		} else player.stop();
 	};
 
-	playLast = () => {
+	playLast = (): AudioResource => {
 		const link = this.previous[1];
 		this.next.unshift(this.previous[0]);
 		this.previous.shift();
@@ -67,7 +82,7 @@ export default class Quene {
 		return toWrite;
 	};
 
-	clear = () => {
+	clear = (): void => {
 		this.next = [];
 	}
 };
