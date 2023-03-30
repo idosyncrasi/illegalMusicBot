@@ -33,32 +33,35 @@ let connection: VoiceConnection | undefined;
 
 
 // TODO?: Refactor connections functions to separate file (if needed by more files)
-const setConnections = (): boolean => {
+const setConnections = (): boolean => { // Define global connections
 	if (!connection || connection === undefined) connection = getVoiceConnection(guildId);
+
 	if (connection) {
 		if ('subscription' in connection!.state && connection!.state.subscription) {
 			player = connection!.state.subscription.player;
 			return true;
 		} else return false;
+
 	} else return false;
 }
 
-const checkConnections = (): boolean => {
+const checkConnections = (): boolean => { // Check if connections are still correct
 	if (!connection || connection === undefined) return false;
+
 	if ('subscription' in connection!.state && connection!.state.subscription) {
 		if(connection!.state.subscription.player) return false;
 	}
 	return true;
 };
 
-const resetConnections = (): void => {
+const resetConnections = (): void => { // Reset all connections
 	if (checkConnections()) return;
 	else setConnections(); 
 };
 
 export default async (client: any): Promise<void> => {
 	client.on('messageCreate', async (message: Message) => {
-		if (message.content[0] === data.prefix) message.content = message.content.slice(1);
+		if (message.content[0] === data.prefix) message.content = message.content.slice(1); // Remove prefix
 		else return;
 
 		console.log(message.content);
@@ -77,6 +80,10 @@ export default async (client: any): Promise<void> => {
 			case 'play':
 				guildId = await play(message);
 				return setConnections();
+
+			case 'playnext':
+				quene.next.unshift(message.content.split(' ')[1]);
+				return message.react(`${emojis.play}`);
 
 			case 'quene':
 				return message.reply(quene.listQuene());

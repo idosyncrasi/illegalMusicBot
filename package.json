@@ -1,7 +1,7 @@
 {
   "name": "illegalmusicbot",
   "description": "A discord bot designed to do bad things",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "license": "UNLICENSED",
   "dependencies": {
     "@discordjs/voice": "^0.15.0",
