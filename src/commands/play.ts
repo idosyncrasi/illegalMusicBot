@@ -3,9 +3,11 @@ import { joinVoiceChannel, AudioPlayerStatus, getVoiceConnection, AudioResource,
 import { createAudioPlayer, createAudioResource } from '@discordjs/voice';
 
 import ytdl from 'ytdl-core';
+import ytpl from 'ytpl';
+import spdl from 'spottydl';
 
 import { quene } from '../listeners/onMessage.js';
-import ytpl from 'ytpl';
+
 
 
 export default async (message: Message): Promise<any> => {
@@ -16,6 +18,8 @@ export default async (message: Message): Promise<any> => {
 	const args = message.content.split(' ');
 	if (args.length < 2) return message.reply("I... don't see a link");
 	let link: string | Promise<string> = args[1];
+
+	console.log(spdl.getTrack("https://music.youtube.com/watch?v=r_IDrSuJV08&feature=share"));
 
 	if (ytpl.validateID(link)) link = await getPlaylist(link);
 	else if (!ytdl.validateURL(link)) return message.reply('Give me an actual link PLEASE');
@@ -36,12 +40,10 @@ export const getSong = (link: string): AudioResource => {
 
 const getPlaylist = async (link: string): Promise<string> => {
 	const toPlay: Promise<string> = ytpl(link).then( (playlist: any) => {
-		console.log(playlist);
-		console.log(playlist.items[0]);
-		console.log(playlist.items[0].shortUrl);
 		const songs: string[] = [];
 		for (let i = 0; i < playlist.estimatedItemCount; i++){
-			if (playlist.items[i].isPlayable) songs.push(playlist.items[i].shortUrl);
+			if(!playlist.items[i]) console.log(`Index ${i} in playlist.items had an error`);
+			else if (playlist.items[i].isPlayable) songs.push(playlist.items[i].shortUrl);
 		}
 		const song = songs[0];
 		songs.shift();

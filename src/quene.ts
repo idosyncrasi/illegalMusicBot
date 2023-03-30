@@ -78,8 +78,15 @@ export default class Quene {
 
 	listQuene = (): string => {
 		let toWrite: string = '';
-		for (let i = 1; i < this.next.length + 1; i++) toWrite += `${i}) ${this.next[i - 1]}\n`;
-		return toWrite;
+		if (this.next.length > 30) {
+			toWrite += 'Quene is longer than 30 items, only showing 30:\n';
+			for (let i = 1; i < 31; i++) toWrite += `${i}) ${this.next[i - 1]}\n`;
+			return toWrite;
+		} else {
+			for (let i = 1; i < this.next.length + 1; i++) toWrite += `${i}) ${this.next[i - 1]}\n`;
+			return toWrite;
+		}
+		
 	};
 
 	clear = (): void => {
