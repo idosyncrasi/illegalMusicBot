@@ -109,5 +109,5 @@ dist
 # VSCode
 .vscode
 
-# yt-dlp binary
-.yt-dlp
+# dependancy binaries
+binaries

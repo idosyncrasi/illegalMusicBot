@@ -5,19 +5,20 @@ import { createAudioPlayer, createAudioResource } from '@discordjs/voice';
 import ytdl from 'ytdl-core';
 
 import { quene } from '../listeners/onMessage.js';
+import ytpl from 'ytpl';
 
 
-
-
-export default (message: Message): any => {
+export default async (message: Message): Promise<any> => {
 	if (!message.member) return;
 	const voiceChannel = message.member.voice.channel;
 
 	if (!voiceChannel) return message.reply('Join a voice channel first idiot');
 	const args = message.content.split(' ');
 	if (args.length < 2) return message.reply("I... don't see a link");
-	const link = args[1];
-	if (!ytdl.validateURL(link)) return message.reply('Give me an actual link PLEASE');
+	let link: string | Promise<string> = args[1];
+
+	if (ytpl.validateID(link)) link = await getPlaylist(link);
+	else if (!ytdl.validateURL(link)) return message.reply('Give me an actual link PLEASE');
 
 	if (getVoiceConnection(voiceChannel.guild.id)) {
 		return oldConneciton(message, voiceChannel, link);
@@ -31,6 +32,25 @@ export default (message: Message): any => {
 export const getSong = (link: string): AudioResource => {
 	const stream = ytdl(link, { filter: 'audioonly', dlChunkSize: 4096 });
 	return createAudioResource(stream);
+};
+
+const getPlaylist = async (link: string): Promise<string> => {
+	const toPlay: Promise<string> = ytpl(link).then( (playlist: any) => {
+		console.log(playlist);
+		console.log(playlist.items[0]);
+		console.log(playlist.items[0].shortUrl);
+		const songs: string[] = [];
+		for (let i = 0; i < playlist.estimatedItemCount; i++){
+			if (playlist.items[i].isPlayable) songs.push(playlist.items[i].shortUrl);
+		}
+		const song = songs[0];
+		songs.shift();
+		for (let i = 0; i < songs.length; i++) {
+			quene.next.push(songs[i]);
+		}
+		return song;
+	});
+	return toPlay;
 };
 
 const oldConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBasedChannel, link: string): any => {

@@ -10,7 +10,6 @@ import Quene from '../quene.js';
 import disconnect from '../commands/disconnect.js';
 
 // TODO: Movable entries in quene
-// TODO: Loop
 // TODO: Log
 
 export const quene: Quene = new Quene;
@@ -58,7 +57,7 @@ const resetConnections = (): void => {
 };
 
 export default async (client: any): Promise<void> => {
-	client.on('messageCreate', (message: Message) => {
+	client.on('messageCreate', async (message: Message) => {
 		if (message.content[0] === data.prefix) message.content = message.content.slice(1);
 		else return;
 
@@ -76,7 +75,7 @@ export default async (client: any): Promise<void> => {
 				}
 
 			case 'play':
-				guildId = play(message);
+				guildId = await play(message);
 				return setConnections();
 
 			case 'quene':

@@ -1,15 +1,31 @@
 {
-	"name": "illegalmusicbot",
-	"description": "A discord bot designed to do bad things",
-	"version": "0.1.2",
-	"license": "UNLICENSED",
-	"dependencies": {
-		"discord.js": "14.8.0",
-		"@discordjs/voice": "0.15.0",
-		"libsodium-wrapper": ">=0.7.11",
-		"ytdl-core": ">=4.11.2"
-	},
-	"engines": { "node" : "19.8.1" },
-	"type":"module",
-	"private": true
+  "name": "illegalmusicbot",
+  "description": "A discord bot designed to do bad things",
+  "version": "0.1.2",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@discordjs/voice": "^0.15.0",
+    "discord.js": "^14.8.0",
+    "libsodium-wrappers": "^0.7.11",
+    "ytdl-core": "^4.11.3",
+    "ytpl": "^2.3.0"
+  },
+  "engines": {
+    "node": "19.8.1"
+  },
+  "type": "module",
+  "private": true,
+  "main": "./dist/bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idosyncrasi/illegalMusicBot.git"
+  },
+  "author": "idosyncrasi",
+  "bugs": {
+    "url": "https://github.com/idosyncrasi/illegalMusicBot/issues"
+  },
+  "homepage": "https://github.com/idosyncrasi/illegalMusicBot#readme"
 }
