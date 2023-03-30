@@ -1,14 +1,11 @@
 import { Message, VoiceBasedChannel, VoiceChannel } from 'discord.js';
-import { joinVoiceChannel, AudioPlayerStatus, getVoiceConnection, AudioResource, AudioPlayer } from '@discordjs/voice';
-import { createAudioPlayer, createAudioResource } from '@discordjs/voice';
+import { joinVoiceChannel, AudioPlayerStatus, getVoiceConnection, AudioResource, AudioPlayer, createAudioPlayer, createAudioResource } from '@discordjs/voice';
 
 import ytdl from 'ytdl-core';
 import ytpl from 'ytpl';
-import spdl from 'spottydl';
+import spdl, { Album, Playlist, Track } from 'spottydl';
 
 import { quene } from '../listeners/onMessage.js';
-
-
 
 export default async (message: Message): Promise<any> => { // Run url checks and pick connection function depending on whether a connection already exists
 	if (!message.member) return;
@@ -18,11 +15,15 @@ export default async (message: Message): Promise<any> => { // Run url checks and
 	const args = message.content.split(' ');
 	if (args.length < 2) return message.reply("I... don't see a link");
 	let link: string | Promise<string> = args[1];
-
-	console.log(spdl.getTrack("https://music.youtube.com/watch?v=r_IDrSuJV08&feature=share"));
-
-	if (ytpl.validateID(link)) link = await getPlaylist(link);
-	else if (!ytdl.validateURL(link)) return message.reply('Give me an actual link PLEASE');
+	
+	const track = await spdl.getTrack(link);
+	const album = await spdl.getAlbum(link);
+	const playlist = await spdl.getPlaylist(link);
+	if(!(typeof track === 'string')) link = convertId(track.id);
+	else if(!(typeof album === 'string')) link = getAlbumSpdl(album, message);
+	else if(!(typeof playlist === 'string')) link = getPlaylistSpdl(playlist, message);
+	else if (ytpl.validateID(link)) link = await getPlaylistYtpl(link); // If link is YouTube playlist, do playlist setup
+	else if (!ytdl.validateURL(link)) return message.reply('Give me an actual link PLEASE'); // If link is not a valid url, yell at the user
 
 	if (getVoiceConnection(voiceChannel.guild.id)) {
 		return oldConneciton(message, voiceChannel, link); // Connection already exists
@@ -38,7 +39,45 @@ export const getSong = (link: string): AudioResource => { // Returns audio strea
 	return createAudioResource(stream);
 };
 
-const getPlaylist = async (link: string): Promise<string> => {
+const convertId = (id: string): string => {
+	return 'https://music.youtube.com/watch?v=' + id;
+}
+
+const getAlbumSpdl = (album: Album, message: Message): string => {
+	if (album.tracks.length > 30) { 
+		message.reply("WARNING: Album larger than 30 items, capping at 30 to avoid issues");
+		const songs: string[] = [];
+		for (let i = 0; i < 30; i++){ // Loops through items given by spdl and adds their urls to array
+			if(!album.tracks[i]) console.log(`Index ${i} in playlist.tracks had an error`);
+			else songs.push(convertId(album.tracks[i].id));
+		}
+
+		return getFirstSong(songs);
+	} else {
+		const songs: string[] = [];
+		for (let i = 0; i < album.tracks.length; i++){ // Loops through items given by spdl and adds their urls to array
+			if(!album.tracks[i]) console.log(`Index ${i} in playlist.tracks had an error`);
+			else songs.push(convertId(album.tracks[i].id));
+		}
+
+		return getFirstSong(songs);
+	}
+};
+
+// BUG: Playlist errors out on 30th song (probably similar for album)
+//		Stop also doesn't work when this happens
+const getPlaylistSpdl = (playlist: Playlist, message: Message): string => {
+	if (playlist.trackCount > 30) { message.reply("WARNING: Playlist larger than 30 items, capping at 30 to avoid issues"); playlist.trackCount = 30; }
+	const songs: string[] = [];
+	for (let i = 0; i < playlist.trackCount; i++){ // Loops through items given by spdl and adds their urls to array
+		if(!playlist.tracks[i]) console.log(`Index ${i} in playlist.tracks had an error`);
+		else songs.push(convertId(playlist.tracks[i].id));
+	}
+
+	return getFirstSong(songs);
+};
+
+const getPlaylistYtpl = async (link: string): Promise<string> => {
 	const toPlay: Promise<string> = ytpl(link).then( (playlist: any) => {
 		const songs: string[] = [];
 
@@ -47,14 +86,7 @@ const getPlaylist = async (link: string): Promise<string> => {
 			else if (playlist.items[i].isPlayable) songs.push(playlist.items[i].shortUrl);
 		}
 
-		const song = songs[0]; // Save to play first song of playlist
-		songs.shift();
-
-		for (let i = 0; i < songs.length; i++) { // Pushes rest of playlist to quene
-			quene.next.push(songs[i]);
-		}
-
-		return song;
+		return getFirstSong(songs);
 	});
 	return toPlay;
 };
@@ -115,3 +147,14 @@ const newConneciton = (message: Message, voiceChannel: VoiceChannel | VoiceBased
 
 	return voiceChannel.guild.id;
 };
+
+const getFirstSong = (songs: string[]): string => {
+	const song = songs[0]; // Save to play first song of playlist
+	songs.shift();
+
+	for (let i = 0; i < songs.length; i++) { // Pushes rest of playlist to quene
+		quene.next.push(songs[i]);
+	}
+
+	return song;
+}
