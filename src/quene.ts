@@ -1,5 +1,5 @@
 import { AudioPlayer, AudioResource } from "@discordjs/voice";
-import { getSong } from "./commands/play.js";
+import { getSong } from "./utils.js";
 
 export default class Quene {
 
